@@ -1,12 +1,10 @@
 from models.model import Model
-from typing import Tuple, List
 
-class PoseEstimator (Model):
+class Classifier(Model):
 
-    def __init__(self, skeleton:List[Tuple]|None=None):
-        self.model_type = 'pose'
+    def __init__(self):
+        self.model_type = 'classifier'
         self.context = {}
-        self.skeleton = skeleton
         self.conf_thresh: float
 
     def prepare_inputs(self, inputs, frame):

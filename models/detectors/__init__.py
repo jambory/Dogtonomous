@@ -1,0 +1,1 @@
+from models.detectors.detector_yolo import DetectorYOLO

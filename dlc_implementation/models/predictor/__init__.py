@@ -1,0 +1,2 @@
+from dlc_implementation.models.predictor.single_predictor import HeatmapPredictor
+from dlc_implementation.models.predictor.base import BasePredictor

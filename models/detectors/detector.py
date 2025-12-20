@@ -4,6 +4,7 @@ class Detector(Model):
     def __init__(self):
         self.model_type = 'detector'
         self.context = {}
+        self.conf_thresh:float
 
     def prepare_inputs(self, inputs, frame):
         """

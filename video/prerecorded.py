@@ -1,10 +1,11 @@
 from video.base import Base
 import cv2
 from typing import List
+from models.modelstack import ModelStack
 
 class PreRecorded (Base):
 
-    def __init__(self, video: str, modelstack: List|None=None,name: str|None=None):
+    def __init__(self, video: str, modelstack: ModelStack|None=None,name: str|None=None):
         super().__init__(video=video, name=name)
         self.n_total_frames = self.cap.get(cv2.CAP_PROP_FRAME_COUNT)
         self.models = modelstack
@@ -26,18 +27,12 @@ class PreRecorded (Base):
             if frame is None:
                 print("No videofeed detected...")
                 break
-            frame,output = self.process_frame(frame)
+            outputs = self.process_frame(frame)
+            self.visualize(frame, outputs)
             self.display_frame(frame)
             if cv2.waitKey(int(1000 / self.fps)) & 0xFF == ord('q'):
                 break
         self.release()
-
-    def process_frame(self, frame: cv2.Mat):
-        if self.models is None:
-            return frame, None
-        else:
-            # TODO: implement model stack and allow frames to be processed.
-            return frame, None
 
 if __name__ == "__main__":
     import dotenv
