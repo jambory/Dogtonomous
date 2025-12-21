@@ -1,4 +1,5 @@
 from video.prerecorded import PreRecorded
+from video.livefeed import LiveFeed
 from models.modelstack import ModelStack
 from models.pose import *
 from models.detectors import *
@@ -23,5 +24,5 @@ classifier_model.load_state_dict(torch.load(classifier_path, weights_only=True))
 modelstack = ModelStack([DetectorYOLO(detector_path), PoseDLC(path=pose_path, model_config_path=pose_config_path,device='mps'),
                          ClassifierTorch1Model(model=classifier_model,device='mps')])
 
-prerecorded = PreRecorded(vid_path, modelstack, 'Model Testing')
-prerecorded.run()
+video = PreRecorded(vid_path, modelstack, 'Model Testing')
+video.run()

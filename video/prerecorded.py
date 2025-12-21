@@ -6,7 +6,7 @@ from models.modelstack import ModelStack
 class PreRecorded (Base):
 
     def __init__(self, video: str, modelstack: ModelStack|None=None,name: str|None=None):
-        super().__init__(video=video, name=name)
+        super().__init__(video=video, name=name, modelstack=modelstack)
         self.n_total_frames = self.cap.get(cv2.CAP_PROP_FRAME_COUNT)
         self.models = modelstack
 

@@ -46,7 +46,7 @@ class ClassifierTorch1Model(Classifier):
         return classifier_outputs.squeeze(0).tolist()
 
     def prepare_outputs(self, output):
-        return zip(self.labels, output)
+        return output
 
 
 

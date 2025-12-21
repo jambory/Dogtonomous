@@ -16,10 +16,10 @@ class ModelStack:
         outputs = []
         output = None
         for model in self.models:
-            model_inputs, frame = model.prepare_inputs(output, frame)
+            model_inputs = model.prepare_inputs(output, frame)
             model_outputs = model.predict(model_inputs)
             output = model.prepare_outputs(model_outputs)
-            output.append(outputs)
+            outputs.append(output)
             if len(output)==0:
                 break
 
