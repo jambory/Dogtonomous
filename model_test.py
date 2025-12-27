@@ -22,7 +22,7 @@ device = "cpu"
 classifier_model = KeypointMLPDeeper(num_keypoints=30, out_dim=3)
 classifier_model.load_state_dict(torch.load(classifier_path, map_location=device,weights_only=True))
 
-modelstack = ModelStack([DetectorYOLO(detector_path), PoseDLC(path=pose_path, model_config_path=pose_config_path,device=device),
+modelstack = ModelStack([DetectorYOLO(detector_path), PoseDLC(path=pose_path, model_config_path=pose_config_path,quantize=True,device=device),
                          ClassifierTorch1Model(model=classifier_model,device=device)])
 
 video = PreRecorded(vid_path, modelstack, 'Model Testing')

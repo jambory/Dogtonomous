@@ -8,7 +8,7 @@ import torch
 
 class PoseInferenceRunner:
 
-    def __init__(self, model_config, model_snapshot_path, device='mps'):
+    def __init__(self, model_config, model_snapshot_path, quanitze=False,device='mps'):
 
         if isinstance(model_config, str):
             with open(model_config, 'r') as file:
@@ -19,6 +19,9 @@ class PoseInferenceRunner:
             self.model_config = model_config
         self.device = device
         self.model = PoseModel.build(self.model_config['model'], snapshot=model_snapshot_path,device=device)
+        if quanitze:
+            from torchao.quantization import Int4WeightOnlyConfig, quantize_
+            quantize_(self.model, Int4WeightOnlyConfig(group_size=32, int4_packing_format="tile_packed_to_4d", int4_choose_qparams_algorithm="hqq"))
         self.model.to(device)
         self.model.eval()
 
