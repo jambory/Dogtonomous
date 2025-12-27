@@ -18,7 +18,7 @@ class PoseInferenceRunner:
         else:
             self.model_config = model_config
         self.device = device
-        self.model = PoseModel.build(self.model_config['model'], snapshot=model_snapshot_path)
+        self.model = PoseModel.build(self.model_config['model'], snapshot=model_snapshot_path,device=device)
         self.model.to(device)
         self.model.eval()
 

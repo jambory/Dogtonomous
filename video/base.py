@@ -11,14 +11,33 @@ class Base:
     """
 
     """
-    def __init__(self, video: str|int, name: str|None = None, modelstack:ModelStack|None = None):
-        self.cap: cv2.VideoCapture = cv2.VideoCapture(video)
+    def __init__(self, video: str|int, name: str|None = None, modelstack:ModelStack|None = None, cap_type='cv'):
         self.frame_n: int = -1 # Initialize the frame number to -1 to signify no frames have been read yet.
-        # self.frame: cv2.Mat | np.ndarray | None  = None
 
-        self.width: int = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        self.height: int = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        self.fps: int = int(self.cap.get(cv2.CAP_PROP_FPS))
+        if cap_type == "cv":
+            self.cap: cv2.VideoCapture = cv2.VideoCapture(video)
+            self.width: int = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            self.height: int = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            self.fps: int = int(self.cap.get(cv2.CAP_PROP_FPS))
+        elif cap_type == "rp":
+            from picamera2 import Picamera2
+            self.cap = Picamera2()
+
+            config = self.cap.create_video_configuration({"format": "XRGB8888", "size":(640,480)})
+            self.cap.configure(config)
+
+            size = config["main"]["size"]
+            self.width, self.height = size
+
+            controls = self.cap.camera_controls
+            _, _,max_fd = controls["FrameDurationLimits"]
+            self.fps = 1_000_000 / max_fd
+            self.cap.start()
+        else:
+            raise ValueError(f"No capture type `{cap_type}`")
+        
+        self.cap_type = cap_type
+
         if name is None:
             if type(video) == int:
                 self.name = f"Live Feed Device: {video}"
@@ -30,14 +49,17 @@ class Base:
         self.modelstack = modelstack
 
     def read(self):
-        ret, frame = self.cap.read()
-        if not ret:
-            print("No frame detected...")
-            return None
+        if self.cap_type == "cv":
+            ret, frame = self.cap.read()
+            if not ret:
+                print("No frame detected...")
+                return None
+        elif self.cap_type == "rp":
+            frame = self.cap.capture_array()
         self.frame_n += 1
         return frame
 
-    def display_frame(self,frame:cv2.Mat|None,w_plt=False):
+    def display_frame(self,frame:np.ndarray|None,w_plt=False):
         if frame is None:
             raise Exception("No frame to be displayed...")
         if w_plt:
@@ -55,10 +77,13 @@ class Base:
         """
         Release video resources and close OpenCV windows.
         """
-        self.cap.release()
+        if self.cap_type=="cv":
+            self.cap.release()
+        else:
+            self.cap.stop()
         cv2.destroyAllWindows()
 
-    def process_frame(self, frame: cv2.Mat):
+    def process_frame(self, frame: np.ndarray):
         if self.modelstack is None:
             return [None]
         else:
@@ -82,7 +107,7 @@ class Base:
 
 
     @staticmethod
-    def visualize_detection(frame:cv2.Mat, model:Detector, output:List):
+    def visualize_detection(frame:np.ndarray, model:Detector, output:List):
         """
         Draw YOLO bounding boxes and confidence values on the frame.
 
@@ -104,7 +129,7 @@ class Base:
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
 
     @staticmethod
-    def visualize_pose(frame: cv2.Mat, model: PoseEstimator ,output: List):
+    def visualize_pose(frame: np.ndarray, model: PoseEstimator ,output: List):
         bodypart_predictions = output[0]
         conf_thresh = model.conf_thresh
         for bodypart, predictions in zip(model.context["bodyparts"], bodypart_predictions):
@@ -128,7 +153,7 @@ class Base:
                     cv2.line(frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 50, 255), thickness=1)
 
     @staticmethod
-    def visualize_classification(frame: cv2.Mat, model: Classifier, output: List):
+    def visualize_classification(frame: np.ndarray, model: Classifier, output: List):
         """
                         Display predicted behaviors (e.g., sit/down/paw) on the frame.
 

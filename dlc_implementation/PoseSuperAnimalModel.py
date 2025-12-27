@@ -145,7 +145,8 @@ class PoseModel(nn.Module):
             cfg: dict,
             weight_init: None | WeightInitialization = None,
             pretrained_backbone: bool = False,
-            snapshot:str=None
+            snapshot:str=None,
+            device:str="cpu"
     ) -> "PoseModel":
         """
         Args:
@@ -221,7 +222,7 @@ class PoseModel(nn.Module):
         if weight_init is not None:
             logging.info(f"Loading pretrained model weights: {weight_init}")
             logging.info(f"The pose model is loading from {weight_init.snapshot_path}")
-            snapshot = torch.load(weight_init.snapshot_path, map_location="cpu")
+            snapshot = torch.load(weight_init.snapshot_path, map_location=device)
             state_dict = snapshot["model"]
 
             # load backbone state dict
@@ -249,7 +250,7 @@ class PoseModel(nn.Module):
                     head.load_state_dict(head_state_dict)
 
         if snapshot is not None:
-            model.load_state_dict(torch.load(snapshot, map_location='mps',weights_only=True)['model'])
+            model.load_state_dict(torch.load(snapshot, map_location=device,weights_only=True)['model'])
 
         return model
 

@@ -6,10 +6,10 @@ class LiveFeed(Base):
     """
 
     """
-    def __init__(self, video: int, modelstack: ModelStack|None=None, name:str|None=None):
+    def __init__(self, video: int, modelstack: ModelStack|None=None, name:str|None=None, cap_type:str="cv"):
         if type(video)!=int:
             raise Exception(f'`video` must be an integer e.g. 0,1,2.. Got: {video}')
-        super().__init__(video=video, name=name, modelstack=modelstack)
+        super().__init__(video=video, name=name, modelstack=modelstack, cap_type=cap_type)
         self.device=video
 
     def run(self):
