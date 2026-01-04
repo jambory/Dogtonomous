@@ -6,7 +6,7 @@ from typing import Tuple, List
 
 class PoseDLC (PoseEstimator):
 
-    def __init__(self, path, model_config_path ,conf_thresh:float=0.5,skeleton:List[Tuple]|None=None,quantize:bool=False,device='cpu'):
+    def __init__(self, path, model_config_path ,conf_thresh:float=0.5,skeleton:bool=True,quantize:bool=False,device='cpu'):
         super().__init__(skeleton=skeleton)
         if 0 > conf_thresh > 1:
             raise ValueError(f"Parameter `conf_thresh` must be set between 0-1, received: {conf_thresh}")
