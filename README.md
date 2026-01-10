@@ -5,6 +5,8 @@ Created by Coby Wilcox, M.S. Student at SFSU.
 Open source library for creating an autonomous device to train your dog! Built upon a top-down pose estimation model made with Deeplabcut, YOLO11s and, with a simple neural network for classifying the poses.
 
 ****
+![ezgif-35f69ca656feab8a](https://github.com/user-attachments/assets/b9f8da58-cf94-4cd6-8f0b-4c502f4da76b)
+
 
 ## Structure
 
