@@ -19,7 +19,7 @@ class PoseDLC (PoseEstimator):
         self.context['bodyparts'] = self.model_config['metadata']['bodyparts']
 
         self.model = PoseInferenceRunner(model_config=self.model_config,
-                                         model_snapshot_path=path,quanitze=quantize,
+                                         model_snapshot_path=path,
                                          device=device)
 
 

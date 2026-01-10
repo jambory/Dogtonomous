@@ -182,6 +182,29 @@ class Base:
             (0, 0, 0), thickness, cv2.LINE_AA
         )
 
+    def record(self, file_name: str|None=None):
+        if file_name is None:
+            import time
+            if self.name.startswith("Live Feed Device:"):
+                file_name = f"dev{self.device}_{time.time()}.mp4"
+            else:
+                file_name = f"{self.name}_{time.time()}.mp4"
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        writer = cv2.VideoWriter(file_name, fourcc, self.fps, (self.width, self.height))
+        while True:
+            frame = self.read()
+            if frame is None:
+                print("No videofeed detected...")
+                break
+            outputs = self.process_frame(frame)
+            self.visualize(frame, outputs)
+            self.display_frame(frame)
+            writer.write(frame)
+            if cv2.waitKey(int(1000 / self.fps)) & 0xFF == ord('q'):
+                break
+        writer.release()
+        self.release()
+
 
 if __name__ == "__main__":
     import dotenv
