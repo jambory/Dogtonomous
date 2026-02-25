@@ -35,7 +35,6 @@ class ModelStack:
             model_inputs, frame = model.prepare_inputs(output, frame)
             model_outputs = model.predict(model_inputs)
             output = model.prepare_outputs(model_outputs)
-            output.append(outputs)
             if len(output) == 0:
                 break
 

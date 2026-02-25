@@ -5,7 +5,7 @@ from pathlib import Path
 
 class DetectorYOLO(Detector):
 
-    def __init__(self, path:str|Path, conf_thresh:float=0.5):
+    def __init__(self, path:str|Path, conf_thresh:float=0.5,device='cpu'):
         super().__init__()
         if  0 > conf_thresh > 1:
             raise ValueError(f"Parameter `conf_thresh` must be set between 0-1, received: {conf_thresh}")
@@ -13,6 +13,7 @@ class DetectorYOLO(Detector):
         self.context['path'] = path
 
         self.model = YOLO(path)
+        self.model.to(device)
 
     def predict(self, inputs):
         # Predict with yolo model, using tracking since it should be on a continuous video.

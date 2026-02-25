@@ -179,22 +179,20 @@ class PoseModel(nn.Module):
                 }
                 args = criterion_cfg.copy()
                 criterion_type = args.pop('type')
-                match criterion_type:
-                    case 'WeightedMSECriterion':
-                        criterion = WeightedMSECriterion()
-                    case 'WeightedHuberCriterion':
-                        criterion = WeightedHuberCriterion()
-                    case _:
-                        raise ValueError(f"Can't find loss type {criterion_type}")
+                if criterion_type == 'WeightedMSECriterion':
+                    criterion = WeightedMSECriterion()
+                elif criterion_type=='WeightedHuberCriterion':
+                    criterion = WeightedHuberCriterion()
+                else:
+                    raise ValueError(f"Can't find loss type {criterion_type}")
                 criterions[loss_name] = criterion
 
                 aggregator_cfg = {"type": "WeightedLossAggregator", "weights": weights}
                 aggregator_type = aggregator_cfg.pop('type')
-                match aggregator_type:
-                    case 'WeightedLossAggregator':
-                        aggregator = WeightedLossAggregator(**aggregator_cfg)
-                    case _:
-                        raise ValueError(f"Can't find aggregator type {aggregator_type}")
+                if aggregator_type== 'WeightedLossAggregator':
+                    aggregator = WeightedLossAggregator(**aggregator_cfg)
+                else:
+                    raise ValueError(f"Can't find aggregator type {aggregator_type}")
                 head_cfg["aggregator"] = aggregator
                 head_cfg["criterion"] = criterions
 

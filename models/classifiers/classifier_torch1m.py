@@ -2,6 +2,7 @@ from models.classifiers.classifier import Classifier
 from torch import nn
 import torch
 from typing import Tuple,List
+import numpy as np
 
 class ClassifierTorch1Model(Classifier):
 
@@ -18,11 +19,10 @@ class ClassifierTorch1Model(Classifier):
         self.labels = labels
 
     def prepare_inputs(self, inputs, frame):
-        keypoints, mask = self._prepare_keypoints(inputs[0],fill_value=0.0)
+        keypoints = inputs[0]
         if self.normalize:
-            h, w = frame.shape[:2]
-            keypoints[:, 0] /= w
-            keypoints[:, 1] /= h
+            keypoints = self.translate_around_center(6, keypoints)
+        keypoints, mask = self._prepare_keypoints(keypoints,fill_value=0.0)
 
         return keypoints.to(self.device), mask.to(self.device)
 
@@ -47,6 +47,24 @@ class ClassifierTorch1Model(Classifier):
 
     def prepare_outputs(self, output):
         return output
+
+    def translate_around_center(self, center_bodypart_idx, kp_array):
+        center_body_part_kp = kp_array[center_bodypart_idx][:2]
+        center_body_part_conf = kp_array[center_bodypart_idx][2]
+        if np.isnan(center_body_part_kp).any() or (center_body_part_conf < self.conf_thresh):
+            center_body_part_kp = np.nanmean(kp_array[:, :2], axis=0)
+
+        kp_array[:, :2] = kp_array[:, :2] - center_body_part_kp
+
+        min_h, max_h = np.nanmin(kp_array[:, 1]), np.nanmax(kp_array[:, 1])
+        min_w, max_w = np.nanmin(kp_array[:, 0]), np.nanmax(kp_array[:, 0])
+        h = max_h - min_h
+        w = max_w - min_w
+
+        kp_array[:, 0] /= w
+        kp_array[:, 1] /= h
+
+        return kp_array
 
 
 
