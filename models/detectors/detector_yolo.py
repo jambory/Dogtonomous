@@ -13,7 +13,9 @@ class DetectorYOLO(Detector):
         self.context['path'] = path
 
         self.model = YOLO(path)
-        self.model.to(device)
+        # Avoid redundant device movement for TensorRT engines as they are already GPU-bound.
+        if not str(path).endswith('.engine'):
+            self.model.to(device)
 
     def predict(self, inputs):
         # Predict with yolo model, using tracking since it should be on a continuous video.
