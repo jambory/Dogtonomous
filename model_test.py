@@ -17,7 +17,7 @@ pose_config_path = os.environ.get('POSE_MODEL_CONFIG_PATH')
 classifier_path = os.environ.get('CLASSIFIER_MODEL_PATH')
 
 # Loading classifier model
-device = "cpu"
+device = "mps"
 
 classifier_model = KeypointMLPDeeper(num_keypoints=30, out_dim=3)
 classifier_model.load_state_dict(torch.load(classifier_path, map_location=device,weights_only=True))

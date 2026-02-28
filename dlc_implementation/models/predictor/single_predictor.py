@@ -111,28 +111,31 @@ class HeatmapPredictor(BasePredictor):
             scale_factors: Scale factors for the poses.
 
         Returns:
-            Pose predictions of the format: (batch_size, num_people = 1, num_joints, 3)
-
-        Example:
+            Pose predictions of the format: (batch_size, 1, num_joints, 3)
         """
         y, x = self.get_top_values(heatmap)
-
         batch_size, num_joints = x.shape
 
-        dz = torch.zeros((batch_size, 1, num_joints, 3), device=heatmap.device)
-        for b in range(batch_size):
-            for j in range(num_joints):
-                dz[b, 0, j, 2] = heatmap[b, y[b, j], x[b, j], j]
-                if locref is not None:
-                    dz[b, 0, j, :2] = locref[b, y[b, j], x[b, j], j, :]
+        # Vectorized extraction of scores and locrefs
+        batch_indices = torch.arange(batch_size, device=heatmap.device).unsqueeze(1)
+        joint_indices = torch.arange(num_joints, device=heatmap.device).unsqueeze(0)
 
-        x, y = torch.unsqueeze(x, 1), torch.unsqueeze(y, 1)
+        # Extract confidence scores from heatmaps
+        scores = heatmap[batch_indices, y, x, joint_indices]
 
-        x = x * scale_factors[1] + 0.5 * scale_factors[1] + dz[:, :, :, 0]
-        y = y * scale_factors[0] + 0.5 * scale_factors[0] + dz[:, :, :, 1]
+        if locref is not None:
+            # Extract location refinement values
+            locref_vals = locref[batch_indices, y, x, joint_indices, :]
+        else:
+            locref_vals = torch.zeros((batch_size, num_joints, 2), device=heatmap.device)
 
-        pose = torch.zeros((batch_size, 1, num_joints, 3), device=heatmap.device)
-        pose[:, :, :, 0] = x
-        pose[:, :, :, 1] = y
-        pose[:, :, :, 2] = dz[:, :, :, 2]
+        # Combine into dz tensor: (batch_size, 1, num_joints, 3)
+        dz = torch.cat([locref_vals, scores.unsqueeze(-1)], dim=-1).unsqueeze(1)
+
+        # Compute final pixel coordinates using scale factors and refinement
+        x_out = x.unsqueeze(1) * scale_factors[1] + 0.5 * scale_factors[1] + dz[..., 0]
+        y_out = y.unsqueeze(1) * scale_factors[0] + 0.5 * scale_factors[0] + dz[..., 1]
+        
+        # Stack to get final (batch_size, 1, num_joints, 3) pose tensor
+        pose = torch.stack([x_out, y_out, dz[..., 2]], dim=-1)
         return pose

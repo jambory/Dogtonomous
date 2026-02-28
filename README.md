@@ -2,63 +2,60 @@
 
 Created by Coby Wilcox, M.S. Student at SFSU.
 
-Open source library for creating an autonomous device to train your dog! Built upon a top-down pose estimation model made with Deeplabcut, YOLO11s and, with a simple neural network for classifying the poses.
+Dogtonomous is an open-source library dedicated to creating an autonomous device for training dogs. It employs a real-time, 3-deep model stack to detect dogs, estimate their poses, and classify their behaviors.
+
+Initially developed for Raspberry Pi as an edge device, the project is now transitioning to the **Nvidia Jetson Orin Nano** to better handle the computational demands of multi-stage AI inference.
 
 ****
 ![ezgif-35f69ca656feab8a](https://github.com/user-attachments/assets/b9f8da58-cf94-4cd6-8f0b-4c502f4da76b)
 
+## 3-Deep Model Stack
 
-## Structure
+The inference pipeline is structured as a sequential stack of three specialized models:
 
-### Video
+1.  **Detector:** A fine-tuned **YOLO11n** model that identifies the dog and generates a bounding box whenever it appears on screen.
+2.  **Pose Estimator:** A fine-tuned **HRNet** pose estimation model. It utilizes the bounding box from the detector to estimate keypoints on the dog's body. This implementation is based on **DeepLabCut (DLC)** but has been decoupled into `dlc_implementation/` to avoid the overhead of the full DLC library.
+3.  **Behavior Classifier:** A simple neural network that processes the estimated keypoints to classify the dog's current behavior (e.g., *sit*, *down*, *paw*).
 
-The video module allows for easy processing of live or prerecorded videos for inference, data-prep, and analysis. Meant to provide clean focused implementations of opencv-python video processors without much of the boilerplate.
+## Project Structure
 
-**Base**
+### `models/`
+Contains the base abstractions for models and the `ModelStack` orchestrator.
+- **Detectors:** YOLO-based implementations for dog detection.
+- **Pose:** Integration with the DLC-derived HRNet model.
+- **Classifiers:** Torch-based neural networks for behavior prediction from keypoints.
 
-The base super class that all video classes will generally inherit from. 
+### `dlc_implementation/`
+A standalone extraction of the DeepLabCut (DLC) inference logic. This allows for lightweight HRNet pose estimation without requiring the full DLC environment, making it more suitable for edge devices.
 
-Functionality:
-- Read frames.
-- Get frame dimensions.
-- Store frame number.
-- Display current frame.
+### `video/`
+A module built on OpenCV for efficient video processing. It supports:
+- **Live Feed:** Real-time processing from camera devices.
+- **Pre-Recorded:** Processing and evaluation of video files.
+- **Platform Support:** Includes legacy support for Raspberry Pi (`cap_type="rp"`) and standard OpenCV capture for Jetson/PC.
 
-**Live**
+## Usage Example
 
-The live video class, can take in a ModelStack to do inference with, or simply display a live feed of video.
+The `ModelStack` allows for easy orchestration of the three models:
 
-Functionality:
+```python
+from models.modelstack import ModelStack
+from models.detectors.detector_yolo import DetectorYOLO
+from models.pose.pose_dlc import PoseDLC
+from models.classifiers.classifier_torch1m import ClassifierTorch1Model
+from video.livefeed import LiveFeed
 
-- Perform inference from ModelStack.
-- Optionally record live video and model outputs.
-- Optionally visualize outputs of model inference.
+# Initialize the stack
+stack = ModelStack([
+    DetectorYOLO(detector_path),
+    PoseDLC(pose_path, pose_config_path),
+    ClassifierTorch1Model(classifier_model)
+])
 
-**PreRecorded**
+# Run on a live feed
+live = LiveFeed(video=0, modelstack=stack)
+live.run()
+```
 
-The video class when reading from a video file. Allows for inference, evaluation, or quickly accessing specific frames and displaying them.
-
-Functionality:
-
-- Move to a specific frame in a video.
-- Perform inference on the video optionally visualizing the outputs.
-- With given ground truth labels perform evaluation on the video.
-
-
-
-****
-
-### Inference
-
-The inference module allows for quick and easy model stack implementations and experimentation. When combined with videoprocessing, allows users to see exactly what their models are predicting. The inference module implementations are meant to be as lightweight as possible to allow for efficient live prediction.
-
-### Evaluation
-
-Made to extend the inference module into a easy solution for objective evaluation of each model in a model stack. 
-
-### Models
-
-Meant to store the underlying structure of the models used for easy calling and analysis. The models classes themselves contain much of the implementations of things like inference and evaluation to allow for easy changing to the structure of the model inputs and outputs without breaking the loops. 
-
-To avoid to much overhead the model classes have defined modes similar to PyTorch model implementations. You can change the model's mode on the fly and therefore, extend what it can do.
-
+## Hardware Transition
+While the codebase still contains options for Raspberry Pi, the project is currently focused on the **Nvidia Jetson Orin Nano**. The Raspberry Pi's processing power was insufficient for real-time execution of the full 3-deep model stack, whereas the Jetson Orin Nano provides the necessary GPU acceleration for smooth inference.
