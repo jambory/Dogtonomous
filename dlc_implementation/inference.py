@@ -52,14 +52,28 @@ class PoseInferenceRunner:
             model_outputs = self.model(inputs)
             raw_predictions = self.model.get_predictions(model_outputs)
 
-        batch_size = len(model_outputs)
+        # Move all predictions to CPU in a single batch operation to avoid per-image sync overhead
+        raw_predictions_cpu = {
+            head: {
+                pred_name: pred.cpu().detach().numpy()
+                for pred_name, pred in head_outputs.items()
+            }
+            for head, head_outputs in raw_predictions.items()
+        }
+
+        # Determine batch size from any of the output tensors
+        first_head = next(iter(raw_predictions_cpu.values()))
+        first_pred = next(iter(first_head.values()))
+        batch_size = first_pred.shape[0]
+
+        # Re-structure into the list-of-dicts format expected by the post-processor
         predictions = [
             {
                 head: {
-                    pred_name: pred[b].cpu().detach().numpy()
-                    for pred_name, pred in head_outputs.items()
+                    pred_name: head_outputs[pred_name][b]
+                    for pred_name in head_outputs
                 }
-                for head, head_outputs in raw_predictions.items()
+                for head, head_outputs in raw_predictions_cpu.items()
             }
             for b in range(batch_size)
         ]

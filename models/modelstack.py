@@ -1,5 +1,6 @@
 from models.model import Model
 from typing import List
+import time
 
 class ModelStack:
 
@@ -15,6 +16,7 @@ class ModelStack:
         """
         outputs = []
         output = None
+        start_time = time.perf_counter()
         for model in self.models:
             model_inputs = model.prepare_inputs(output, frame)
             model_outputs = model.predict(model_inputs)
@@ -22,6 +24,8 @@ class ModelStack:
             outputs.append(output)
             if len(output)==0:
                 break
+
+        print(f"Time to process frame: {1000 * (time.perf_counter() - start_time):.3f} miliseconds.")
 
         return outputs
 
@@ -31,12 +35,15 @@ class ModelStack:
         the model outputs if needed.
         """
         output = None
+        start_time = time.perf_counter()
         for model in self.models:
             model_inputs, frame = model.prepare_inputs(output, frame)
             model_outputs = model.predict(model_inputs)
             output = model.prepare_outputs(model_outputs)
             if len(output) == 0:
                 break
+        
+        print("Time to process frame: ", time.perf_counter() - start_time)
 
         return output
 

@@ -219,3 +219,8 @@ models/detectors/weights
 
 # Data
 data/
+
+.specify/
+.vscode/
+.gemini/
+
