@@ -34,14 +34,18 @@ async def connect(sid, environ):
 async def process_frame(sid, data):
     """
     Receives a frame, runs inference, and returns results.
-    data format: {'frame_id': int, 'image': 'base64_string'}
+    data format: {'frame_id': int, 'image': 'base64_string', 'timestamp_sent': float}
     """
     frame_id = data['frame_id']
+    timestamp_sent = data['timestamp_sent']
     
     # 1. Decode Image
     img_data = base64.b64decode(data['image'])
     nparr = np.frombuffer(img_data, np.uint8)
     frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+    # Note: If Pi uses XRGB8888, cv2.imdecode should handle the JPEG bytes correctly.
+    # But if the raw array was RGB, we'd need: frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 
     # 2. Run Detector
     raw_detections = detector.predict(frame)
@@ -49,6 +53,7 @@ async def process_frame(sid, data):
 
     results = {
         'frame_id': frame_id,
+        'timestamp_sent': timestamp_sent, # Echo back for RTT calculation
         'detections': [],
         'poses': []
     }
