@@ -1,7 +1,7 @@
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
-from dlc_implementation.model_dependencies.registry import Registry, build_from_cfg
+from dlc_implementation.model_dependencies.registry import build_from_cfg
 from torch import nn
 
 import numpy as np
